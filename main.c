@@ -24,6 +24,9 @@ volatile xQueueHandle serial_str_queue = NULL;
 volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
 volatile xQueueHandle serial_rx_queue = NULL;
 
+void my_task1(void *pvParameters);
+void my_task2(void *pvParameters);
+
 /* Queue structure used for passing messages. */
 typedef struct {
 	char str[100];
@@ -247,12 +250,38 @@ int main()
 	            (signed portCHAR *) "Serial Read/Write",
 	            512 /* stack size */, NULL,
 	            tskIDLE_PRIORITY + 10, NULL);
+	xTaskCreate(my_task1,
+                    (signed portCHAR *) "task 1",
+                    512 , NULL,
+                    tskIDLE_PRIORITY + 6, NULL);
+	xTaskCreate(my_task2,
+                    (signed portCHAR *) "task 2",
+                    512 , NULL,
+                    tskIDLE_PRIORITY + 6, NULL);
+
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
 
 	return 0;
 }
+
+
+void my_task1(void *pvParameters){
+
+	while(1){	
+		send_byte('n');
+	}
+}
+
+void my_task2(void *pvParameters){
+	
+	int i;
+	for(i=0; i<1000; i++)	
+                send_byte('y');
+}
+
+
 
 void vApplicationTickHook()
 {
