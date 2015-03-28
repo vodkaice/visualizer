@@ -8,17 +8,19 @@
 TRACE_QUEUE = True
 TRACE_MUTEX = True
 TRACE_BINARY_SEMAPHORE = False
-TRACE_INTERRUPT = False
+TRACE_INTERRUPT = True
 
 log = open('log', 'r')
 lines = log.readlines()
 
 tasks = {}
 events = []
+contexts=[]
 mutexes = {}
 all_queues = {}
 binsems = {}
 queues = {}
+context_switch=open('context_switch.txt','w')
 
 for line in lines :
 	line = line.strip()
@@ -53,6 +55,14 @@ for line in lines :
 		event['task'] = in_task
 		event['time'] = in_time
 		events.append(event);
+
+		context = {}
+		context['type'] = 'context switch'
+		context['time'] = (in_time - out_time)
+		contexts.append(context);
+		
+		context_switch .write('context switch takes %f ms\n' %(context['time']) )
+		
 
 		last_task = in_task
 
@@ -162,7 +172,7 @@ for line in lines :
 
 			events.append(event)
 			tasks[int_num]['created'] = True if dir == 'in' else False
-
+context_switch.close()
 log.close()
 
 grasp = open('sched.grasp', 'w')
