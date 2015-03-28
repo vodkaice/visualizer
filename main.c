@@ -43,7 +43,7 @@ void USART2_IRQHandler()
 {
 	static signed portBASE_TYPE xHigherPriorityTaskWoken;
 	serial_ch_msg rx_msg;
-
+	trace_interrupt_in();
 	/* If this interrupt is for a transmit... */
 	if (USART_GetITStatus(USART2, USART_IT_TXE) != RESET) {
 		/* "give" the serial_tx_wait_sem semaphore to notfiy processes
@@ -75,6 +75,7 @@ void USART2_IRQHandler()
 
 	if (xHigherPriorityTaskWoken)
 		taskYIELD();
+	trace_interrupt_out();
 }
 
 void send_byte(char ch)
@@ -253,11 +254,11 @@ int main()
 	xTaskCreate(my_task1,
                     (signed portCHAR *) "task 1",
                     512 , NULL,
-                    tskIDLE_PRIORITY + 6, NULL);
+                    tskIDLE_PRIORITY + 2 , NULL);
 	xTaskCreate(my_task2,
                     (signed portCHAR *) "task 2",
                     512 , NULL,
-                    tskIDLE_PRIORITY + 6, NULL);
+                    tskIDLE_PRIORITY + 2 , NULL);
 
 
 	/* Start running the tasks. */
@@ -269,18 +270,21 @@ int main()
 
 void my_task1(void *pvParameters){
 
-	while(1){	
-		send_byte('n');
+	int i;
+	for(i=0; i<20; i++){
+		queue_str_task("task 1\n\r",300);
 	}
+
 }
 
 void my_task2(void *pvParameters){
 	
 	int i;
-	for(i=0; i<1000; i++)	
-                send_byte('y');
+	for(i=0; i<20; i++){
+		 queue_str_task("two\n\r",400);
+	}
+	
 }
-
 
 
 void vApplicationTickHook()
@@ -289,12 +293,12 @@ void vApplicationTickHook()
 
 void vApplicationIdleHook(void)
 {
-	send_byte('i');
+	/*send_byte('i');
 	send_byte('d');
 	send_byte('l');
 	send_byte('e');
 	send_byte('\n');
-	send_byte('\r');
+	send_byte('\r');*/
 }
 
 int _snprintf_int(int num, char *buf, int buf_size)
